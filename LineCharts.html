@@ -1,0 +1,135 @@
+<html>
+  <head>
+    <title>LineChartsProyecto</title>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+	<script type="text/javascript">
+	  var jsonData01
+	  function myCallback01(dataWeGotViaJsonp) {
+	    jsonData01 = dataWeGotViaJsonp['feeds'];
+	  };
+	</script>
+	
+	<script type="text/javascript">
+	  var jsonData02
+	  function myCallback02(dataWeGotViaJsonp) {
+	    jsonData02 = dataWeGotViaJsonp['feeds'];
+	  };
+	</script>
+
+	<script type="text/javascript">
+	  var jsonData
+	  function myCallback03(dataWeGotViaJsonp) {
+	    jsonData = dataWeGotViaJsonp['feeds'];
+	  };
+	</script>	
+	
+	<script type="text/javascript" src="https://api.thingspeak.com/channels/CHANNEL_ID/feeds.json?results=40&callback=myCallback01"></script>
+	<script type="text/javascript" src="https://api.thingspeak.com/channels/CHANNEL_ID/feeds.json?results=40&callback=myCallback02"></script>
+	<script type="text/javascript" src="https://api.thingspeak.com/channels/CHANNEL_ID/feeds.json?results=80&callback=myCallback03"></script>
+
+	<script type="text/javascript"> 
+	  var j =0;
+	  for(var i=0; i<jsonData.length-1; i++) {
+	    if(jsonData01[j]['created_at']>jsonData02[j]['created_at']){
+		  j = i/2;
+	      jsonData[i]['created_at'] = jsonData02[j]['created_at'];
+		  jsonData[i]['field1'] = jsonData02[j]['field1'];
+		  jsonData[i]['field2'] = jsonData02[j]['field2'];
+		  jsonData[i+1]['created_at'] = jsonData01[j]['created_at'];
+		  jsonData[i+1]['field1'] = jsonData01[j]['field1'];
+		  jsonData[i+1]['field2'] = jsonData01[j]['field2'];
+	      i = i+1; 
+	    } else {
+	      j = i/2;
+	      jsonData[i]['created_at'] = jsonData01[j]['created_at'];
+		  jsonData[i]['field1'] = jsonData01[j]['field1'];
+		  jsonData[i]['field2'] = jsonData01[j]['field2'];
+		  jsonData[i+1]['created_at'] = jsonData02[j]['created_at'];
+		  jsonData[i+1]['field1'] = jsonData02[j]['field1'];
+		  jsonData[i+1]['field2'] = jsonData02[j]['field2'];
+	      i = i+1;	  
+	    };
+	  };		
+	</script>
+		
+
+	<script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+	  
+	  function drawChart() {
+        var dataHum = new google.visualization.DataTable();
+	    dataHum.addColumn('datetime','Time');
+	    dataHum.addColumn('number','Hum');
+	    for(var i=0; i<jsonData.length; i++) {
+	      var timestamp = jsonData[i]['created_at'];
+	  	  var Hum = jsonData[i]['field1'];
+		  dataHum.addRow([new Date(timestamp), parseFloat(Hum)]);
+	    };
+		
+		var optionsHum = {
+		  title: 'Estacion meteorologica: Humedad [%]', legend: {position: 'bottom'},
+		  curveType: 'function', colors: ['blue'],
+		  series: {0: {targetAxisIndex:0},1:{targetAxisIndex:1}},
+		  vAxes: {0: {title: 'Hum [%]'}}
+		};		  
+		
+		var chart = new google.visualization.LineChart(document.getElementById('hum_chart'));
+		chart.draw(dataHum,optionsHum);
+	  }
+    </script>
+
+	<script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+	  function drawChart() {
+        var dataTemp = new google.visualization.DataTable();
+	    dataTemp.addColumn('datetime','Time');
+	    dataTemp.addColumn('number','Temp');
+	    for(var i=0; i<jsonData.length; i++) {
+	      var timestamp = jsonData[i]['created_at'];
+	  	  var Temp = jsonData[i]['field2'];
+		  dataTemp.addRow([new Date(timestamp), parseFloat(Temp)]);
+	    };
+		
+		var optionsTemp = {
+		  title: 'Estacion meteorologica: Temperatura [C]', legend: {position: 'bottom'},
+		  curveType: 'function', colors: ['red'],
+		  series: {0: {targetAxisIndex:0},1:{targetAxisIndex:1}},
+		  vAxes: {0: {title: 'Temp [C]'}}
+		};		  
+		
+		var chart = new google.visualization.LineChart(document.getElementById('temp_chart'));
+		chart.draw(dataTemp,optionsTemp);
+	  }
+    </script>
+	
+	<script type="text/javascript">
+	  google.charts.load('current', {'packages':['table']});
+      google.charts.setOnLoadCallback(drawTable);
+	  
+	  function drawTable() {
+	    var dataListaTable = new google.visualization.DataTable();
+	    dataListaTable.addColumn('datetime','Time');
+	    dataListaTable.addColumn('number','Temp');
+        dataListaTable.addColumn('number','Hum');
+		for(var i=0; i<jsonData.length; i++) {
+	      var timestamp = jsonData[i]['created_at'];
+	  	  var Temp = jsonData[i]['field2'];
+	  	  var Hum = jsonData[i]['field1'];
+		  dataListaTable.addRow([new Date(timestamp), parseFloat(Temp), parseFloat(Hum)]);		
+	    };
+	  
+      var table = new google.visualization.Table(document.getElementById('table_div'));
+      table.draw(dataListaTable, {showRowNumber: false, width: '100%', height: '100%'});
+	  }
+	</script>
+
+  </head>
+  <body>
+    <div id="hum_chart"></div>
+    <div id="temp_chart"></div>
+	<div id="table_div"></div>
+  </body>
+</html>
